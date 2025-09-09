@@ -1,11 +1,10 @@
-using System;
 using SO;
 using UnityEngine;
 
 public class CubicBezierPath : MonoBehaviour{
     [Header("Control Points (P0..P3)")] public Transform P0, P1, P2, P3;
 
-    [Header("Follower")] public Transform player;
+    [Header("Follower")] public Movement player;
     public bool follow = true;
     public bool loop = true;
     public bool constantSpeed = true;
@@ -21,16 +20,16 @@ public class CubicBezierPath : MonoBehaviour{
     [SerializeField, HideInInspector] private float[] tTable;
     [SerializeField, HideInInspector] private int tableSamples = 200;
 
-    private float traveled = 0f; // quãng đường đã đi (m)
-    private float tParam = 0f;   // tham số t (0..1)
+    private float traveled = 0f;
+    private float tParam = 0f;
     private ConfigTest1 _configTest1;
     private LineRenderer _lineRenderer;
 
-    void OnEnable() {
+    private void OnEnable() {
         RebuildTable();
     }
 
-    void OnValidate() {
+    private void OnValidate() {
         RebuildTable();
     }
 
@@ -39,11 +38,10 @@ public class CubicBezierPath : MonoBehaviour{
         _configTest1 = SOExtensions.GetConfigTest1();
     }
 
-    void Update() {
+    private void Update() {
         if (!follow || player == null || !HasAllPoints()) return;
 
         if (constantSpeed) {
-            // speed là m/s
             traveled += _configTest1.speedPlayer * Time.deltaTime;
 
             if (loop)
@@ -57,20 +55,20 @@ public class CubicBezierPath : MonoBehaviour{
         }
 
         Vector3 pos = Evaluate(tParam);
-        player.position = pos;
-
+        player.Move(pos);
+        GameEvents.ProcessMove?.Invoke(tParam);
         if (faceForward) {
             Vector3 tangent = Derivative(tParam);
             if (tangent.sqrMagnitude > 1e-8f) {
                 Quaternion look = Quaternion.LookRotation(tangent.normalized, Vector3.up);
-                player.rotation = look;
+                player.transform.rotation = look;
             }
         }
 
         DrawLine();
     }
 
-    void DrawLine() {
+    private void DrawLine() {
         int seg = Mathf.Max(2, _lineRenderer.positionCount - 1);
         Vector3 prev = Evaluate(0f);
         _lineRenderer.SetPosition(0, prev);
@@ -81,6 +79,8 @@ public class CubicBezierPath : MonoBehaviour{
         }
     }
 
+
+#region Calculate line By ChatGPT
     private Vector3 Evaluate(float t) {
         Vector3 p0 = P0.position, p1 = P1.position, p2 = P2.position, p3 = P3.position;
         float u = 1f - t;
@@ -96,7 +96,7 @@ public class CubicBezierPath : MonoBehaviour{
         float u = 1f - t;
         return 3f * u * u * (p1 - p0) + 6f * u * t * (p2 - p1) + 3f * t * t * (p3 - p2);
     }
-
+    
     void RebuildTable() {
         if (!HasAllPoints()) return;
 
@@ -139,6 +139,7 @@ public class CubicBezierPath : MonoBehaviour{
 
         return Mathf.Lerp(tTable[hi - 1], tTable[hi], f);
     }
+#endregion
 
     bool HasAllPoints() => P0 && P1 && P2 && P3;
 

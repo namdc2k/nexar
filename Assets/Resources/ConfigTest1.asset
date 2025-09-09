@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speedPlayer: 0.45
   distancePlayerToTarget: 1.1540884
-  RotateSmooth: 10
+  AngleLook: 60
+  RotateSmooth: 3

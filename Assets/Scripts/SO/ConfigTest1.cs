@@ -5,6 +5,7 @@ namespace SO{
     public class ConfigTest1 : ScriptableObject{
         [Range(0, 2)] public float speedPlayer;
         [Range(0, 3)] public float distancePlayerToTarget;
+        [Range(30, 75)] public float AngleLook = 60;
         public float RotateSmooth;
     }
 }
