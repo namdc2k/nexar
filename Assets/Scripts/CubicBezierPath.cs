@@ -1,26 +1,30 @@
+using System;
+using SO;
 using UnityEngine;
+
 public class CubicBezierPath : MonoBehaviour{
     [Header("Control Points (P0..P3)")] public Transform P0, P1, P2, P3;
 
     [Header("Follower")] public Transform player;
     public bool follow = true;
     public bool loop = true;
-    public bool constantSpeed = true;       
-    public float speed = 2f;                   
-    public bool faceForward = true;            
+    public bool constantSpeed = true;
+    public bool faceForward = true;
     [Range(0f, 1f)] public float tManual = 0f;
 
     [Header("Gizmos")] [Range(4, 256)] public int gizmoSegments = 48;
     public Color curveColor = Color.yellow;
     public Color controlColor = new Color(1f, 1f, 1f, 0.6f);
-    
+
     [SerializeField, HideInInspector] private float totalLength;
-    [SerializeField, HideInInspector] private float[] lengthTable; 
-    [SerializeField, HideInInspector] private float[] tTable;    
+    [SerializeField, HideInInspector] private float[] lengthTable;
+    [SerializeField, HideInInspector] private float[] tTable;
     [SerializeField, HideInInspector] private int tableSamples = 200;
 
     private float traveled = 0f; // quãng đường đã đi (m)
     private float tParam = 0f;   // tham số t (0..1)
+    private ConfigTest1 _configTest1;
+    private LineRenderer _lineRenderer;
 
     void OnEnable() {
         RebuildTable();
@@ -30,12 +34,17 @@ public class CubicBezierPath : MonoBehaviour{
         RebuildTable();
     }
 
+    private void Start() {
+        _lineRenderer = GetComponent<LineRenderer>();
+        _configTest1 = SOExtensions.GetConfigTest1();
+    }
+
     void Update() {
         if (!follow || player == null || !HasAllPoints()) return;
 
         if (constantSpeed) {
             // speed là m/s
-            traveled += speed * Time.deltaTime;
+            traveled += _configTest1.speedPlayer * Time.deltaTime;
 
             if (loop)
                 tParam = DistanceToT(Mathf.Repeat(traveled, Mathf.Max(totalLength, 0.0001f)));
@@ -43,7 +52,7 @@ public class CubicBezierPath : MonoBehaviour{
                 tParam = DistanceToT(Mathf.Min(traveled, totalLength));
         }
         else {
-            tParam += speed * Time.deltaTime;
+            tParam += _configTest1.speedPlayer * Time.deltaTime;
             tParam = loop ? Mathf.Repeat(tParam, 1f) : Mathf.Clamp01(tParam);
         }
 
@@ -57,9 +66,22 @@ public class CubicBezierPath : MonoBehaviour{
                 player.rotation = look;
             }
         }
+
+        DrawLine();
     }
-    
-    public Vector3 Evaluate(float t) {
+
+    void DrawLine() {
+        int seg = Mathf.Max(2, _lineRenderer.positionCount - 1);
+        Vector3 prev = Evaluate(0f);
+        _lineRenderer.SetPosition(0, prev);
+        for (int i = 1; i <= seg; i++) {
+            float t = i / (float)seg;
+            Vector3 curr = Evaluate(t);
+            _lineRenderer.SetPosition(i, curr);
+        }
+    }
+
+    private Vector3 Evaluate(float t) {
         Vector3 p0 = P0.position, p1 = P1.position, p2 = P2.position, p3 = P3.position;
         float u = 1f - t;
         float b0 = u * u * u;
@@ -69,12 +91,12 @@ public class CubicBezierPath : MonoBehaviour{
         return b0 * p0 + b1 * p1 + b2 * p2 + b3 * p3;
     }
 
-    public Vector3 Derivative(float t) {
+    private Vector3 Derivative(float t) {
         Vector3 p0 = P0.position, p1 = P1.position, p2 = P2.position, p3 = P3.position;
         float u = 1f - t;
         return 3f * u * u * (p1 - p0) + 6f * u * t * (p2 - p1) + 3f * t * t * (p3 - p2);
     }
-    
+
     void RebuildTable() {
         if (!HasAllPoints()) return;
 
@@ -103,11 +125,11 @@ public class CubicBezierPath : MonoBehaviour{
 
     float DistanceToT(float distance) {
         if (totalLength <= 1e-6f) return 0f;
-        
+
         int hi = System.Array.BinarySearch(lengthTable, distance);
         if (hi >= 0) return tTable[hi];
 
-        hi = ~hi; // vị trí chèn
+        hi = ~hi;
         if (hi <= 0) return tTable[0];
         if (hi >= lengthTable.Length) return tTable[lengthTable.Length - 1];
 
@@ -123,7 +145,7 @@ public class CubicBezierPath : MonoBehaviour{
     // ---------- Gizmos ----------
     void OnDrawGizmos() {
         if (!HasAllPoints()) return;
-        
+
         Gizmos.color = controlColor;
         Gizmos.DrawLine(P0.position, P1.position);
         Gizmos.DrawLine(P2.position, P3.position);
@@ -136,6 +158,7 @@ public class CubicBezierPath : MonoBehaviour{
             Gizmos.DrawLine(prev, curr);
             prev = curr;
         }
+
         Vector3 test = Evaluate(tManual);
         Gizmos.DrawSphere(test, 0.06f);
     }
