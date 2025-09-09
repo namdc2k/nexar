@@ -266,10 +266,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8439502492378860890, guid: 42d54b6c46df2eb45a405db1f56cfc27, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4059506428758583166, guid: 42d54b6c46df2eb45a405db1f56cfc27, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 42d54b6c46df2eb45a405db1f56cfc27, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
