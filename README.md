@@ -9,3 +9,8 @@
 #
 - material và shader của test 2 nằm trong folder Asset/Test2
 - ảnh panel demo ở trong canvas của scene_1(test_1)
+# Test 3:
+![Alt text](images/test_3.png)
+#
+- phần tìm vị trí để set cho object text chưa tối ưu cho các hình đặc biệt
+- phần auto scale của text chưa tìm được hướng giải quyết
